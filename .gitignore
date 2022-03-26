@@ -1,1 +1,6 @@
 *.csv
+cmake-build-debug
+test_data
+.idea
+analysis
+*.pdf
