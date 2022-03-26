@@ -16,10 +16,10 @@ CMake Error at /home/aarc/.local/share/JetBrains/Toolbox/apps/CLion/ch-0/213.717
 
     Change Dir: /home/aarc/EXTERNAL/Launch/data_analysis/cmake-build-debug/CMakeFiles/CMakeTmp
     
-    Run Build Command(s):/home/aarc/.local/share/JetBrains/Toolbox/apps/CLion/ch-0/213.7172.20/bin/ninja/linux/ninja cmTC_25be6 && [1/2] Building C object CMakeFiles/cmTC_25be6.dir/testCCompiler.c.o
-    [2/2] Linking C executable cmTC_25be6
-    FAILED: cmTC_25be6 
-    : && /usr/bin/gcc-arm-none-eabi-10.3-2021.10/bin/arm-none-eabi-gcc   CMakeFiles/cmTC_25be6.dir/testCCompiler.c.o -o cmTC_25be6   && :
+    Run Build Command(s):/home/aarc/.local/share/JetBrains/Toolbox/apps/CLion/ch-0/213.7172.20/bin/ninja/linux/ninja cmTC_ebfe5 && [1/2] Building C object CMakeFiles/cmTC_ebfe5.dir/testCCompiler.c.o
+    [2/2] Linking C executable cmTC_ebfe5
+    FAILED: cmTC_ebfe5 
+    : && /usr/bin/gcc-arm-none-eabi-10.3-2021.10/bin/arm-none-eabi-gcc   CMakeFiles/cmTC_ebfe5.dir/testCCompiler.c.o -o cmTC_ebfe5   && :
     /usr/bin/gcc-arm-none-eabi-10.3-2021.10/bin/../lib/gcc/arm-none-eabi/10.3.1/../../../../arm-none-eabi/bin/ld: /usr/bin/gcc-arm-none-eabi-10.3-2021.10/bin/../lib/gcc/arm-none-eabi/10.3.1/../../../../arm-none-eabi/lib/libc.a(lib_a-exit.o): in function `exit':
     exit.c:(.text.exit+0x2c): undefined reference to `_exit'
     collect2: error: ld returned 1 exit status

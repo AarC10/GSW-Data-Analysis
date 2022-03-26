@@ -11,12 +11,7 @@
 #include <fstream>
 #include <string>
 #include <vector>
-#include "matplotlibcpp.h"
 
+void plotData(std::vector <std::string> fileNames);
 
-std::vector<std::string> parseCSV(std::string fileName, matplotlibcpp::Figure &fig);
-
-matplotlibcpp::figure plotData(std::vector<std::string> data);
-
-
-void plotData();
+std::vector<float[2]> parseCSV(std::string fileName);
