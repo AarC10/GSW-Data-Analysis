@@ -1,15 +1,8 @@
-#include <vector>
+#include "analysis.h"
 #include <dirent.h>
-#include <string>
-#include <ostream>
-#include <iostream>
 #include <sstream>
-#include <fstream>
 #include <string.h>
-#include "matplotlibcpp.h"
 
-using namespace std;
-namespace plt = matplotlibcpp;
 
 string directory = "";
 static int timeBlock = 10000000; // TODO: Allow user to set time block
@@ -17,7 +10,7 @@ static long startTime = 0;
 static long endTime = 0;
 
 
-vector <string> splitCSVLine(string str) {
+vector<string> splitCSVLine(string str) {
     vector <string> internal;
     stringstream ss(str);
     string token;
@@ -92,8 +85,6 @@ array<vector<npy_double>, 2> parseCSV(string filename, string xCol, string yCol)
             sumY += stof(values[yColNum]);
             processedCount++;
 
-
-
             if (currentTime - blockStartTime >= timeBlock) {
                 npy_double x = sumX / processedCount;
                 npy_double y = sumY / processedCount;
@@ -105,8 +96,6 @@ array<vector<npy_double>, 2> parseCSV(string filename, string xCol, string yCol)
                 sumY = 0;
                 blockStartTime = currentTime;
             }
-
-
 
 
         }
@@ -142,6 +131,7 @@ int main(int argc, char *argv[]) {
 
     struct dirent *ent = NULL;
     vector <string> files;
+
     while ((ent = readdir(dir)) != NULL) {
         string filename = ent->d_name;
         if (filename.find(".csv") != string::npos) {
