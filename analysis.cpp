@@ -1,37 +1,114 @@
 #include <vector>
-#include <filesystem>
 #include <dirent.h>
 #include <string>
-#include <stdio.h>
 #include <ostream>
 #include <iostream>
+#include <sstream>
 #include <fstream>
-#include <ios>
+#include <string.h>
 #include "matplotlibcpp.h"
-#include <vector>
 
 using namespace std;
 namespace plt = matplotlibcpp;
 
 string directory = "";
-int timeBlock = 10; // TODO: Allow user to set time block
+static int timeBlock = 10000000; // TODO: Allow user to set time block
+static long startTime = 0;
+static long endTime = 0;
 
-int totalLines = 0;
 
-vector<float[2]> parseCSV(std::string filename, string x, string y) {
+vector <string> splitCSVLine(string str) {
+    vector <string> internal;
+    stringstream ss(str);
+    string token;
+
+    while (getline(ss, token, ',')) {
+        internal.push_back(token);
+    }
+
+    return internal;
+}
+
+
+array<vector<npy_double>, 2> parseCSV(string filename, string xCol, string yCol) {
     ifstream file(directory + filename);
-    vector<float[2]> data;
-    int sum = 0;
-    int values = 0;
+    array<vector<npy_double>, 2> data;
+
+    // Variables for time block purposes
+    npy_double sumX = 0;
+    npy_double sumY = 0;
+    int timeColNum = 0;
+    int blockStartTime = 0;
+    int timeDiff = 0;
+    int processedCount = 0;
+
+    // Columns being read
+    int xColNum = 0;
+    int yColNum = 0;
+
     string line = "";
-    string delimiter = ",";
+
 
     file.open("test_data/" + filename);
     if (file.is_open()) {
+
+        // Get the headers from the first line
+        getline(file, line);
+        vector <string> headers = splitCSVLine(line);
+
+        // Set the necessary column numbers
+        for (int i = 0; i < headers.size(); i++) {
+            if (headers[i] == "MILLISEC") {
+                timeColNum = i;
+            }
+
+            if (headers[i] == xCol) {
+                xColNum = i;
+            }
+            if (headers[i] == yCol) {
+                yColNum = i;
+            }
+        }
+
+        // Get the data
         while (getline(file, line)) {
             getline(file, line);
-            cout << line << endl;
-            totalLines++;
+            vector <string> values = splitCSVLine(line);
+
+            if (values[timeColNum] == "" || values[xColNum] == "" || values[yColNum] == "") {
+                continue;
+            }
+
+            long currentTime = stol(values[timeColNum]);
+
+            if (currentTime <= startTime) {
+                blockStartTime = currentTime;
+                continue;
+            } else if (currentTime >= endTime) {
+                break;
+            }
+
+            sumX += stof(values[xColNum]);
+            sumY += stof(values[yColNum]);
+            processedCount++;
+
+
+
+            if (currentTime - blockStartTime >= timeBlock) {
+                npy_double x = sumX / processedCount;
+                npy_double y = sumY / processedCount;
+
+                data[0].push_back(x);
+                data[1].push_back(y);
+
+                sumX = 0;
+                sumY = 0;
+                blockStartTime = currentTime;
+            }
+
+
+
+
         }
 
     } else {
@@ -43,29 +120,18 @@ vector<float[2]> parseCSV(std::string filename, string x, string y) {
     return data;
 }
 
-
-//void plotData() {
-//
-//
-//
-//    vector<double> x;
-//    vector<double> y;
-//
-//
-//    plt::plot(x, y);
-//    plt::save("./plot.png");
-//}
-
 int main(int argc, char *argv[]) {
     // TODO: Improve flexibility of passing arguments
-    if (argc != 4) {
-        cout << "Only received " << argc - 1 << " arguments, but expected 3." << endl;
-        cout << "Usage: " << argv[0] << " <start_time> <end_time> <directory>" << endl;
+    if (argc != 6) {
+        cout << "Only received " << argc - 1 << " arguments, but expected 5." << endl;
+        cout << "Usage: " << argv[0] << " <start_time> <end_time> <directory> <x_col> <y_col>" << endl;
         return 1;
     }
 
-    int startTimeInSec = stoi(argv[1]);
-    int endTimeInSec = stoi(argv[2]);
+    startTime = stoi(argv[1]);
+    endTime = stoi(argv[2]);
+    string xCol = argv[4];
+    string yCol = argv[5];
 
     DIR *dir = opendir(argv[3]);
     directory = argv[3];
@@ -80,14 +146,20 @@ int main(int argc, char *argv[]) {
         string filename = ent->d_name;
         if (filename.find(".csv") != string::npos) {
             files.push_back(filename);
-            parseCSV(filename.c_str(), "x", "y");
+            array<vector<npy_double>, 2> csvData = parseCSV(filename.c_str(), xCol, yCol);
+
+            plt::plot(csvData[0], csvData[1]);
+
         }
     }
 
+    plt::xlabel(xCol);
+    plt::ylabel(yCol);
+
+    plt::show();
+
 
     closedir(dir);
-
-    printf("%d\n", totalLines);
 
     return 0;
 }

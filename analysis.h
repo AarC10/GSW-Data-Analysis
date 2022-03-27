@@ -14,4 +14,6 @@
 
 void plotData(std::vector <std::string> fileNames);
 
-std::vector<float[2]> parseCSV(std::string fileName);
+array<vector<float>, 2> parseCSV(std::string filename, string xCol, string yCol);
+
+vector<string> splitCSVLine(string str);
