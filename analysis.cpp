@@ -22,6 +22,40 @@ vector <string> splitCSVLine(string str) {
     return internal;
 }
 
+void plotData(int startTime, int endTime, string directory, string xCol, string yCol) {
+    array<vector<npy_double>, 2> csvData;
+
+    DIR *dir = opendir(directory.c_str());
+
+    if (dir == NULL) {
+        cout << "Could not open directory " << directory << endl;
+    }
+
+    struct dirent *ent = NULL;
+    vector <string> files;
+
+
+    while ((ent = readdir(dir)) != NULL) {
+        string filename = ent->d_name;
+        if (filename.find(".csv") != string::npos) {
+            files.push_back(filename);
+            array<vector<npy_double>, 2> newCSVData = parseCSV(filename.c_str(), xCol, yCol);
+            csvData[0].insert(csvData[0].end(), newCSVData[0].begin(), newCSVData[0].end());
+            csvData[1].insert(csvData[1].end(), newCSVData[1].begin(), newCSVData[1].end());
+        }
+    }
+
+    plt::plot(csvData[0], csvData[1]);
+
+
+    plt::xlabel(xCol);
+    plt::ylabel(yCol);
+
+    plt::save("plot.pdf");
+
+    closedir(dir);
+}
+
 
 array<vector<npy_double>, 2> parseCSV(string filename, string xCol, string yCol) {
     ifstream file(directory + filename);
@@ -117,46 +151,17 @@ int main(int argc, char *argv[]) {
     if (argc != 6) {
         cout << "Only received " << argc - 1 << " arguments, but expected 5." << endl;
         cout << "Usage: " << argv[0] << " <start_time> <end_time> <directory> <x_col> <y_col>" << endl;
+
         return 1;
     }
 
     startTime = stol(argv[1]);
     endTime = stol(argv[2]);
+    string directory = argv[3];
     string xCol = argv[4];
     string yCol = argv[5];
-    array<vector<npy_double>, 2> csvData;
 
-
-    DIR *dir = opendir(argv[3]);
-    directory = argv[3];
-    if (dir == NULL) {
-        cout << "Could not open directory " << argv[3] << endl;
-        return 1;
-    }
-
-    struct dirent *ent = NULL;
-    vector <string> files;
-
-
-    while ((ent = readdir(dir)) != NULL) {
-        string filename = ent->d_name;
-        if (filename.find(".csv") != string::npos) {
-            files.push_back(filename);
-            array<vector<npy_double>, 2> newCSVData = parseCSV(filename.c_str(), xCol, yCol);
-            csvData[0].insert(csvData[0].end(), newCSVData[0].begin(), newCSVData[0].end());
-            csvData[1].insert(csvData[1].end(), newCSVData[1].begin(), newCSVData[1].end());
-        }
-    }
-
-    plt::plot(csvData[0], csvData[1]);
-
-
-    plt::xlabel(xCol);
-    plt::ylabel(yCol);
-
-    plt::save("plot.pdf");
-
-    closedir(dir);
+    plotData(startTime, endTime, directory, xCol, yCol);
 
     return 0;
 }

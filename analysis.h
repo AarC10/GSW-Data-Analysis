@@ -37,3 +37,14 @@ array<vector<npy_double>, 2> parseCSV(std::string filename, string xCol, string 
  * @return
  */
 vector<string> splitCSVLine(string str);
+
+
+/**
+ * Takes parsed data and graphs it
+ * @param startTime
+ * @param endTime
+ * @param directory
+ * @param xCol
+ * @param yCol
+ */
+void plotData(int startTime, int endTime, string directory, string xCol, string yCol)
