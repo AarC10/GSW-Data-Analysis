@@ -10,7 +10,7 @@ static long startTime = 0;
 static long endTime = 0;
 
 
-vector<string> splitCSVLine(string str) {
+vector <string> splitCSVLine(string str) {
     vector <string> internal;
     stringstream ss(str);
     string token;
@@ -51,7 +51,7 @@ array<vector<npy_double>, 2> parseCSV(string filename, string xCol, string yCol)
 
         // Set the necessary column numbers
         for (int i = 0; i < headers.size(); i++) {
-            if (headers[i] == "MILLISEC") {
+            if (headers[i] == "MICROSEC") {
                 timeColNum = i;
             }
 
@@ -109,6 +109,9 @@ array<vector<npy_double>, 2> parseCSV(string filename, string xCol, string yCol)
     return data;
 }
 
+
+
+
 int main(int argc, char *argv[]) {
     // TODO: Improve flexibility of passing arguments
     if (argc != 6) {
@@ -117,10 +120,12 @@ int main(int argc, char *argv[]) {
         return 1;
     }
 
-    startTime = stoi(argv[1]);
-    endTime = stoi(argv[2]);
+    startTime = stol(argv[1]);
+    endTime = stol(argv[2]);
     string xCol = argv[4];
     string yCol = argv[5];
+    array<vector<npy_double>, 2> csvData;
+
 
     DIR *dir = opendir(argv[3]);
     directory = argv[3];
@@ -132,22 +137,24 @@ int main(int argc, char *argv[]) {
     struct dirent *ent = NULL;
     vector <string> files;
 
+
     while ((ent = readdir(dir)) != NULL) {
         string filename = ent->d_name;
         if (filename.find(".csv") != string::npos) {
             files.push_back(filename);
-            array<vector<npy_double>, 2> csvData = parseCSV(filename.c_str(), xCol, yCol);
-
-            plt::plot(csvData[0], csvData[1]);
-
+            array<vector<npy_double>, 2> newCSVData = parseCSV(filename.c_str(), xCol, yCol);
+            csvData[0].insert(csvData[0].end(), newCSVData[0].begin(), newCSVData[0].end());
+            csvData[1].insert(csvData[1].end(), newCSVData[1].begin(), newCSVData[1].end());
         }
     }
+
+    plt::plot(csvData[0], csvData[1]);
+
 
     plt::xlabel(xCol);
     plt::ylabel(yCol);
 
-    plt::show();
-
+    plt::save("plot.pdf");
 
     closedir(dir);
 
