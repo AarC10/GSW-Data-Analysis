@@ -1,64 +1,38 @@
 #include "analysis.h"
-#include <dirent.h>
 #include <sstream>
-#include <string.h>
+#include <fstream>
+#include <experimental/filesystem>
 
 
-string directory = "";
+using namespace std;
+namespace plt = matplotlibcpp;
+namespace fs = std::experimental::filesystem;
+
+
 static int timeBlock = 10000000; // TODO: Allow user to set time block
 static long startTime = 0;
 static long endTime = 0;
-
+static bool finishedReading = false;
 
 vector <string> splitCSVLine(string str) {
-    vector <string> internal;
+    vector <string> result;
+
     stringstream ss(str);
     string token;
 
     while (getline(ss, token, ',')) {
-        internal.push_back(token);
+        result.push_back(token);
     }
-
-    return internal;
+    return result;
 }
-
-void plotData(int startTime, int endTime, string directory, string xCol, string yCol) {
-    array<vector<npy_double>, 2> csvData;
-
-    DIR *dir = opendir(directory.c_str());
-
-    if (dir == NULL) {
-        cout << "Could not open directory " << directory << endl;
-    }
-
-    struct dirent *ent = NULL;
-    vector <string> files;
-
-
-    while ((ent = readdir(dir)) != NULL) {
-        string filename = ent->d_name;
-        if (filename.find(".csv") != string::npos) {
-            files.push_back(filename);
-            array<vector<npy_double>, 2> newCSVData = parseCSV(filename.c_str(), xCol, yCol);
-            csvData[0].insert(csvData[0].end(), newCSVData[0].begin(), newCSVData[0].end());
-            csvData[1].insert(csvData[1].end(), newCSVData[1].begin(), newCSVData[1].end());
-        }
-    }
-
-    plt::plot(csvData[0], csvData[1]);
-
-
-    plt::xlabel(xCol);
-    plt::ylabel(yCol);
-
-    plt::save("plot.pdf");
-
-    closedir(dir);
-}
-
 
 array<vector<npy_double>, 2> parseCSV(string filename, string xCol, string yCol) {
-    ifstream file(directory + filename);
+    if (!fs::exists(filename)) {
+        cout << "File does not exist" << endl;
+        return {};
+    }
+
+    ifstream file(filename);
     array<vector<npy_double>, 2> data;
 
     // Variables for time block purposes
@@ -66,7 +40,6 @@ array<vector<npy_double>, 2> parseCSV(string filename, string xCol, string yCol)
     npy_double sumY = 0;
     int timeColNum = 0;
     int blockStartTime = 0;
-    int timeDiff = 0;
     int processedCount = 0;
 
     // Columns being read
@@ -75,17 +48,14 @@ array<vector<npy_double>, 2> parseCSV(string filename, string xCol, string yCol)
 
     string line = "";
 
-
-    file.open("test_data/" + filename);
     if (file.is_open()) {
-
         // Get the headers from the first line
         getline(file, line);
         vector <string> headers = splitCSVLine(line);
 
         // Set the necessary column numbers
         for (int i = 0; i < headers.size(); i++) {
-            if (headers[i] == "MICROSEC") {
+            if (headers[i] == "MILLISEC") {
                 timeColNum = i;
             }
 
@@ -99,7 +69,6 @@ array<vector<npy_double>, 2> parseCSV(string filename, string xCol, string yCol)
 
         // Get the data
         while (getline(file, line)) {
-            getline(file, line);
             vector <string> values = splitCSVLine(line);
 
             if (values[timeColNum] == "" || values[xColNum] == "" || values[yColNum] == "") {
@@ -108,10 +77,10 @@ array<vector<npy_double>, 2> parseCSV(string filename, string xCol, string yCol)
 
             long currentTime = stol(values[timeColNum]);
 
-            if (currentTime <= startTime) {
-                blockStartTime = currentTime;
+            if (currentTime < startTime) {
                 continue;
-            } else if (currentTime >= endTime) {
+            } else if (currentTime > endTime) {
+                finishedReading = true;
                 break;
             }
 
@@ -143,7 +112,28 @@ array<vector<npy_double>, 2> parseCSV(string filename, string xCol, string yCol)
     return data;
 }
 
+void plotData(string directory, string xCol, string yCol) {
+    array<vector<npy_double>, 2> csvData;
 
+    plt::xlabel(xCol);
+    plt::ylabel(yCol);
+
+
+    // Read files in directory
+    for (const auto &entry: fs::directory_iterator(directory)) {
+        if (entry.path().extension() == ".csv") {
+            csvData = parseCSV(entry.path().string(), xCol, yCol);
+
+            plt::plot(csvData[0], csvData[1]);
+        }
+
+        if (finishedReading) {
+            break;
+        }
+    }
+
+    plt::save("plot.pdf");
+}
 
 
 int main(int argc, char *argv[]) {
@@ -161,7 +151,7 @@ int main(int argc, char *argv[]) {
     string xCol = argv[4];
     string yCol = argv[5];
 
-    plotData(startTime, endTime, directory, xCol, yCol);
+    plotData(directory, xCol, yCol);
 
     return 0;
 }

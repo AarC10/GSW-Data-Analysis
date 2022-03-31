@@ -12,13 +12,11 @@
 
 #include <stdint.h>
 #include <iostream>
-#include <fstream>
 #include <string>
 #include <vector>
+
 #include "matplotlibcpp.h"
 
-using namespace std;
-namespace plt = matplotlibcpp;
 
 /**
  * Parses a given csv file and returns an array of two vectors
@@ -29,14 +27,14 @@ namespace plt = matplotlibcpp;
  * @param yCol
  * @return vector<vector<double>>
  */
-array<vector<npy_double>, 2> parseCSV(std::string filename, string xCol, string yCol);
+std::array<std::vector<npy_double>, 2> parseCSV(std::string filename, std::string xCol, std::string yCol);
 
 /**
  * Splits a line of comma separated values into a vector of strings
  * @param str
  * @return
  */
-vector<string> splitCSVLine(string str);
+std::vector<std::string> splitCSVLine(std::string str);
 
 
 /**
@@ -47,4 +45,4 @@ vector<string> splitCSVLine(string str);
  * @param xCol
  * @param yCol
  */
-void plotData(int startTime, int endTime, string directory, string xCol, string yCol)
+void plotData(int startTime, int endTime, std::string directory, std::string xCol, std::string yCol);
