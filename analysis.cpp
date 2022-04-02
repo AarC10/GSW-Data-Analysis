@@ -9,13 +9,13 @@ namespace plt = matplotlibcpp;
 namespace fs = std::experimental::filesystem;
 
 
-static int timeBlock = 10000000; // TODO: Allow user to set time block
-static long startTime = 0;
+static int timeBlock = 100000; // TODO: Allow user to set time block
+static ulong startTime = 0;
 static long endTime = 0;
 static bool finishedReading = false;
 
-vector <string> splitCSVLine(string str) {
-    vector <string> result;
+vector<string> splitCSVLine(const string &str) {
+    vector<string> result;
 
     stringstream ss(str);
     string token;
@@ -26,93 +26,96 @@ vector <string> splitCSVLine(string str) {
     return result;
 }
 
-array<vector<npy_double>, 2> parseCSV(string filename, string xCol, string yCol) {
+array<vector<npy_double>, 2> parseCSV(const string &filename, const string &xCol, const string &yCol) {
+    int millisecColNum = -1;
+    int microsecColNum = -1;
+    int xColNum = -1;
+    int yColNum = -1;
+
     if (!fs::exists(filename)) {
         cout << "File does not exist" << endl;
         return {};
     }
 
     ifstream file(filename);
-    array<vector<npy_double>, 2> data;
+    vector<npy_double> xVals;
+    vector<npy_double> yVals;
 
-    // Variables for time block purposes
-    npy_double sumX = 0;
-    npy_double sumY = 0;
-    int timeColNum = 0;
-    int blockStartTime = 0;
-    int processedCount = 0;
+    string line;
 
-    // Columns being read
-    int xColNum = 0;
-    int yColNum = 0;
-
-    string line = "";
-
-    if (file.is_open()) {
-        // Get the headers from the first line
-        getline(file, line);
-        vector <string> headers = splitCSVLine(line);
-
-        // Set the necessary column numbers
-        for (int i = 0; i < headers.size(); i++) {
-            if (headers[i] == "MILLISEC") {
-                timeColNum = i;
-            }
-
-            if (headers[i] == xCol) {
-                xColNum = i;
-            }
-            if (headers[i] == yCol) {
-                yColNum = i;
-            }
+    getline(file, line);
+    vector<string> headers = splitCSVLine(line);
+    for (int i = 0; i < headers.size(); i++) {
+        if (headers[i] == "MILLISEC") {
+            millisecColNum = i;
         }
 
-        // Get the data
-        while (getline(file, line)) {
-            vector <string> values = splitCSVLine(line);
+        if (headers[i] == "MICROSEC") {
+            microsecColNum = i;
+        }
 
-            if (values[timeColNum] == "" || values[xColNum] == "" || values[yColNum] == "") {
+        if (headers[i] == xCol) {
+            xColNum = i;
+        }
+
+        if (headers[i] == yCol) {
+            yColNum = i;
+        }
+    }
+
+    if (millisecColNum == -1 || microsecColNum == -1 || xColNum == -1 || yColNum == -1) {
+        cout << "Columns not found" << endl;
+        return {};
+    }
+
+    if (file.is_open()) {
+        double timeblockXSum = 0;
+        double timeblockYSum = 0;
+
+        while (!finishedReading && getline(file, line)) {
+            vector<string> lineVals = splitCSVLine(line);
+
+            if (lineVals[millisecColNum].empty() && lineVals[microsecColNum].empty()) {
                 continue;
             }
 
-            long currentTime = stol(values[timeColNum]);
 
-            if (currentTime < startTime) {
+            ulong currentMillis = stol(lineVals[millisecColNum]);
+            ulong currentMicros = stol(lineVals[microsecColNum]);
+            double xVal = stod(lineVals[xColNum]);
+            double yVal = stod(lineVals[yColNum]);
+
+            if (currentMillis < startTime) {
                 continue;
-            } else if (currentTime > endTime) {
+            }
+
+            if (currentMillis > endTime) {
                 finishedReading = true;
                 break;
             }
 
-            sumX += stof(values[xColNum]);
-            sumY += stof(values[yColNum]);
-            processedCount++;
+            timeblockXSum += xVal;
+            timeblockYSum += yVal;
 
-            if (currentTime - blockStartTime >= timeBlock) {
-                npy_double x = sumX / processedCount;
-                npy_double y = sumY / processedCount;
+            if (currentMillis - startTime > timeBlock) {
+                xVals.push_back(timeblockXSum);
+                yVals.push_back(timeblockYSum);
+                cout << timeblockXSum << " " << timeblockYSum << endl;
+                timeblockXSum = 0;
+                timeblockYSum = 0;
 
-                data[0].push_back(x);
-                data[1].push_back(y);
-
-                sumX = 0;
-                sumY = 0;
-                blockStartTime = currentTime;
+                startTime = currentMillis;
             }
-
-
         }
 
-    } else {
-        cout << "Could not open " << filename << endl;
     }
 
     file.close();
 
-    return data;
+    return {xVals, yVals};
 }
 
-void plotData(string directory, string xCol, string yCol) {
+void plotData(const string &directory, const string &xCol, const string &yCol) {
     array<vector<npy_double>, 2> csvData;
 
     plt::xlabel(xCol);

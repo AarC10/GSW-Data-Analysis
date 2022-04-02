@@ -27,14 +27,14 @@
  * @param yCol
  * @return vector<vector<double>>
  */
-std::array<std::vector<npy_double>, 2> parseCSV(std::string filename, std::string xCol, std::string yCol);
+std::array<std::vector<npy_double>, 2> parseCSV(const std::string& filename, const std::string& xCol, const std::string& yCol);
 
 /**
  * Splits a line of comma separated values into a vector of strings
  * @param str
  * @return
  */
-std::vector<std::string> splitCSVLine(std::string str);
+std::vector<std::string> splitCSVLine(const std::string& str);
 
 
 /**
