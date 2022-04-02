@@ -45,6 +45,7 @@ array<vector<npy_double>, 2> parseCSV(const string &filename, const string &xCol
 
     getline(file, line);
     vector<string> headers = splitCSVLine(line);
+
     for (int i = 0; i < headers.size(); i++) {
         if (headers[i] == "MILLISEC") {
             millisecColNum = i;
@@ -79,20 +80,26 @@ array<vector<npy_double>, 2> parseCSV(const string &filename, const string &xCol
                 continue;
             }
 
-
             ulong currentMillis = stol(lineVals[millisecColNum]);
             ulong currentMicros = stol(lineVals[microsecColNum]);
             double xVal = stod(lineVals[xColNum]);
             double yVal = stod(lineVals[yColNum]);
 
+
             if (currentMillis < startTime) {
+                cout << "Start time is before first time stamp" << endl;
+                cout << "Start time: " << startTime << endl;
                 continue;
             }
 
             if (currentMillis > endTime) {
+                cout << endTime << " " << currentMillis << endl;
+                cout << "End time is after last time stamp" << endl;
                 finishedReading = true;
                 break;
             }
+
+            cout << currentMillis << " " << currentMicros << " " << xVal << " " << yVal << endl;
 
             timeblockXSum += xVal;
             timeblockYSum += yVal;
@@ -117,23 +124,28 @@ array<vector<npy_double>, 2> parseCSV(const string &filename, const string &xCol
 
 void plotData(const string &directory, const string &xCol, const string &yCol) {
     array<vector<npy_double>, 2> csvData;
+    array<vector<npy_double>, 2> newData;
+    int fileCount = 1;
 
     plt::xlabel(xCol);
     plt::ylabel(yCol);
 
+    // While file exists
+    while (fs::exists(directory + "/" + "log" + to_string(fileCount) + ".csv")) {
+        cout << "Reading file " << fileCount << endl;
+        newData = parseCSV(directory + "/" + "log" + to_string(fileCount) + ".csv", xCol, yCol);
 
-    // Read files in directory
-    for (const auto &entry: fs::directory_iterator(directory)) {
-        if (entry.path().extension() == ".csv") {
-            csvData = parseCSV(entry.path().string(), xCol, yCol);
-
-            plt::plot(csvData[0], csvData[1]);
-        }
+        csvData[0].insert(csvData[0].end(), newData[0].begin(), newData[0].end());
+        csvData[1].insert(csvData[1].end(), newData[1].begin(), newData[1].end());
 
         if (finishedReading) {
             break;
         }
+
+        fileCount++;
     }
+
+    plt::plot(csvData[0], csvData[1]);
 
     plt::save("plot.pdf");
 }
