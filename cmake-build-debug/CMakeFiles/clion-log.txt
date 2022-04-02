@@ -1,4 +1,0 @@
-Cannot generate into /home/aarc/EXTERNAL/Launch/data_analysis
-It is already used for project /run/media/aarc/EXTERNAL/Launch/data_analysis
-
-Please either delete it manually or select another generation directory
