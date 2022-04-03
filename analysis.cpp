@@ -9,7 +9,7 @@ namespace plt = matplotlibcpp;
 namespace fs = std::experimental::filesystem;
 
 
-static int timeBlock = 100000; // TODO: Allow user to set time block
+static int timeBlock = 1000; // TODO: Allow user to set time block
 static ulong startTime = 0;
 static long endTime = 0;
 static bool finishedReading = false;
@@ -72,6 +72,7 @@ array<vector<npy_double>, 2> parseCSV(const string &filename, const string &xCol
     if (file.is_open()) {
         double timeblockXSum = 0;
         double timeblockYSum = 0;
+        int lineCount = 0;
 
         while (!finishedReading && getline(file, line)) {
             vector<string> lineVals = splitCSVLine(line);
@@ -87,29 +88,28 @@ array<vector<npy_double>, 2> parseCSV(const string &filename, const string &xCol
 
 
             if (currentMillis < startTime) {
-                cout << "Start time is before first time stamp" << endl;
-                cout << "Start time: " << startTime << endl;
+                cout << "Start time is before first time stamp: " << startTime <<  " " << lineCount << endl;
                 continue;
             }
 
             if (currentMillis > endTime) {
-                cout << endTime << " " << currentMillis << endl;
                 cout << "End time is after last time stamp" << endl;
                 finishedReading = true;
                 break;
             }
 
-            cout << currentMillis << " " << currentMicros << " " << xVal << " " << yVal << endl;
 
             timeblockXSum += xVal;
             timeblockYSum += yVal;
+            lineCount++;
 
             if (currentMillis - startTime > timeBlock) {
-                xVals.push_back(timeblockXSum);
-                yVals.push_back(timeblockYSum);
-                cout << timeblockXSum << " " << timeblockYSum << endl;
+                xVals.push_back(timeblockXSum / lineCount);
+                yVals.push_back(timeblockYSum / lineCount);
+                cout << lineCount << " " << timeblockXSum / lineCount << " " << timeblockYSum / lineCount << endl;
                 timeblockXSum = 0;
                 timeblockYSum = 0;
+                lineCount = 0;
 
                 startTime = currentMillis;
             }
@@ -132,7 +132,6 @@ void plotData(const string &directory, const string &xCol, const string &yCol) {
 
     // While file exists
     while (fs::exists(directory + "/" + "log" + to_string(fileCount) + ".csv")) {
-        cout << "Reading file " << fileCount << endl;
         newData = parseCSV(directory + "/" + "log" + to_string(fileCount) + ".csv", xCol, yCol);
 
         csvData[0].insert(csvData[0].end(), newData[0].begin(), newData[0].end());
