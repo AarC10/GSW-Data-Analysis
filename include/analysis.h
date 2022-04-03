@@ -17,6 +17,15 @@
 
 #include "matplotlibcpp.h"
 
+/**
+ * Utility function that combines milli and micro seconds into a single value
+ *
+ * @param milli
+ * @param micro
+ * @return
+ */
+ulong timeCombine(long milli, long micro);
+
 
 /**
  * Parses a given csv file and returns an array of two vectors
@@ -27,14 +36,14 @@
  * @param yCol
  * @return vector<vector<double>>
  */
-std::array<std::vector<npy_double>, 2> parseCSV(const std::string& filename, const std::string& xCol, const std::string& yCol);
+std::array<std::vector<npy_double>, 2> parseCSV(const std::string &filename, const std::string &xCol, const std::string &yCol);
 
 /**
  * Splits a line of comma separated values into a vector of strings
  * @param str
  * @return
  */
-std::vector<std::string> splitCSVLine(const std::string& str);
+std::vector<std::string> splitCSVLine(const std::string &str);
 
 
 /**
@@ -46,3 +55,4 @@ std::vector<std::string> splitCSVLine(const std::string& str);
  * @param yCol
  */
 void plotData(int startTime, int endTime, std::string directory, std::string xCol, std::string yCol);
+

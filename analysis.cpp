@@ -14,6 +14,10 @@ static ulong startTime = 0;
 static long endTime = 0;
 static bool finishedReading = false;
 
+ulong timeCombine(long milli, long micro) {
+    return (milli * 1000) + micro;
+}
+
 vector<string> splitCSVLine(const string &str) {
     vector<string> result;
 
