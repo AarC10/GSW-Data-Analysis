@@ -26,6 +26,13 @@
  */
 ulong timeCombine(long milli, long micro);
 
+/**
+ * Utility function for parsing arguments
+ *
+ * @param argc
+ * @param argv
+ */
+bool parseArgs(int argc, char *argv[]);
 
 /**
  * Parses a given csv file and returns an array of two vectors
@@ -36,7 +43,7 @@ ulong timeCombine(long milli, long micro);
  * @param yCol
  * @return vector<vector<double>>
  */
-std::array<std::vector<npy_double>, 2> parseCSV(const std::string &filename, const std::string &xCol, const std::string &yCol);
+std::array<std::vector<npy_double>, 2> parseCSV();
 
 /**
  * Splits a line of comma separated values into a vector of strings
@@ -54,5 +61,5 @@ std::vector<std::string> splitCSVLine(const std::string &str);
  * @param xCol
  * @param yCol
  */
-void plotData(int startTime, int endTime, std::string directory, std::string xCol, std::string yCol);
+void plotData();
 
