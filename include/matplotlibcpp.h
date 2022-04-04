@@ -2,7 +2,7 @@
 
 // Python headers must be included before any system headers, since
 // they define _POSIX_C_SOURCE
-#include "python3.9/Python.h"
+#include "python3.10/Python.h"
 
 #include <vector>
 #include <map>
@@ -17,7 +17,7 @@
 
 #ifndef WITHOUT_NUMPY
 #  define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
-#  include <python3.9/numpy/arrayobject.h>
+#  include <python3.10/numpy/arrayobject.h>
 
 #  ifdef WITH_OPENCV
 #    include <opencv2/opencv.hpp>

@@ -92,12 +92,12 @@ array<vector<npy_double>, 2> parseCSV(const string &filename, const string &xCol
 
 
             if (currentMillis < startTime) {
-                cout << "Start time is before first time stamp: " << startTime <<  " " << lineCount << endl;
+//                cout << "Start time is before first time stamp: " << startTime <<  " " << lineCount << endl;
                 continue;
             }
 
             if (currentMillis > endTime) {
-                cout << "End time is after last time stamp" << endl;
+//                cout << "End time is after last time stamp" << endl;
                 finishedReading = true;
                 break;
             }
