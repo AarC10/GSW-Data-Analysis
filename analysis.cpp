@@ -9,7 +9,7 @@ namespace plt = matplotlibcpp;
 namespace fs = std::experimental::filesystem;
 
 
-static int timeBlock = 1000; // TODO: Allow user to set time block
+static int timeBlock = 1;
 static ulong startTime = 0;
 static ulong endTime = 18446744073709551; // Literally the end of time
 static bool finishedReading = false;
@@ -38,6 +38,7 @@ bool parseArgs(int argc, char *argVector[]) {
     for (int i = 1; i < argc; i++) {
         if (strcmp(argVector[i], "-t") == 0) {
             startTime = atol(argVector[i + 1]);
+            endTime = atol(argVector[i + 2]);
 
             i += 2;
         } else if (strcmp(argVector[i], "-b") == 0) {
