@@ -9,15 +9,15 @@ namespace plt = matplotlibcpp;
 namespace fs = std::experimental::filesystem;
 
 
-static int timeBlock = 1;
-static ulong startTime = 0;
-static ulong endTime = 18446744073709551; // Literally the end of time
+static int block = 1;
+static uint64_t startX = 0;
+static uint64_t endX = 18446744073709551; // Literally the end of time
 static bool finishedReading = false;
 static string xAxis;
 static string yAxis;
 static string directory;
 
-ulong timeCombine(long milli, long micro) {
+uint64_t timeCombine(uint64_t milli, uint64_t micro) {
     return (milli * 1000) + micro;
 }
 
@@ -36,13 +36,13 @@ bool parseArgs(int argc, char *argVector[]) {
      * -y <y_axis>
      */
     for (int i = 1; i < argc; i++) {
-        if (strcmp(argVector[i], "-t") == 0) {
-            startTime = atol(argVector[i + 1]);
-            endTime = atol(argVector[i + 2]);
+        if (strcmp(argVector[i], "-s") == 0) {
+            startX = atoi(argVector[i + 1]);
+            endX = atoi(argVector[i + 2]);
 
             i += 2;
         } else if (strcmp(argVector[i], "-b") == 0) {
-            timeBlock = atol(argVector[i + 1]);
+            block = atoi(argVector[i + 1]);
 
             i++;
         } else if (strcmp(argVector[i], "-d") == 0) {
@@ -74,7 +74,7 @@ bool parseArgs(int argc, char *argVector[]) {
 
             i++;
         } else if (strcmp(argVector[i], "-h") == 0) {
-            cout << "Usage: ./analysis -t <start_time> <end_time> -b <time_block> -d <directory>" << endl;
+            cout << "Usage: ./analysis -s <start_x> <end_x> -b <time_block> -d <directory>" << endl;
             helpSet = true;
             break;
         }
@@ -146,8 +146,8 @@ array<vector<npy_double>, 2> parseCSV(const string &filename) {
     }
 
     if (file.is_open()) {
-        double timeblockXSum = 0;
-        double timeblockYSum = 0;
+        double blockXSum = 0;
+        double blockYSum = 0;
         int lineCount = 0;
 
         while (!finishedReading && getline(file, line)) {
@@ -157,37 +157,34 @@ array<vector<npy_double>, 2> parseCSV(const string &filename) {
                 continue;
             }
 
-            ulong currentMillis = stol(lineVals[millisecColNum]);
-            ulong currentMicros = stol(lineVals[microsecColNum]);
             double xVal = stod(lineVals[xColNum]);
             double yVal = stod(lineVals[yColNum]);
 
 
-            if (currentMillis < startTime) {
-//                cout << "Start time is before first time stamp: " << startTime <<  " " << lineCount << endl;
+            if (xVal < startX) {
                 continue;
             }
 
-            if (currentMillis > endTime) {
-//                cout << "End time is after last time stamp" << endl;
+            cout << xVal << " " << endX << endl;
+            if (xVal > endX) {
+                cout << "End" << endl;
                 finishedReading = true;
                 break;
             }
 
 
-            timeblockXSum += xVal;
-            timeblockYSum += yVal;
+            blockXSum += xVal;
+            blockYSum += yVal;
             lineCount++;
 
-            if (currentMillis - startTime > timeBlock) {
-                xVals.push_back(timeblockXSum / lineCount);
-                yVals.push_back(timeblockYSum / lineCount);
-                cout << lineCount << " " << timeblockXSum / lineCount << " " << timeblockYSum / lineCount << endl;
-                timeblockXSum = 0;
-                timeblockYSum = 0;
+            if (xVal - startX > block) {
+                xVals.push_back(blockXSum / lineCount);
+                yVals.push_back(blockYSum / lineCount);
+                blockXSum = 0;
+                blockYSum = 0;
                 lineCount = 0;
 
-                startTime = currentMillis;
+                startX = xVal;
             }
         }
 
@@ -202,6 +199,8 @@ void plotData() {
     array<vector<npy_double>, 2> csvData;
     array<vector<npy_double>, 2> newData;
     int fileCount = 1;
+//    npy_double t = milliseconds;
+//    t += microseconds * 1000
 
     plt::xlabel(xAxis);
     plt::ylabel(yAxis);
